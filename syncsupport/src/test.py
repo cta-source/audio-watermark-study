@@ -18,21 +18,19 @@ cyclicpad = 0               # (units are 1/RATE seconds) For signal conditioning
 neighborhood = 48000        # (units are 1/RATE seconds) Checking each segment of a PN sequence against 60 seconds of audio takes too long.  Only check in the "neighborhood" of where the segment is expected to be.
 
 # Test files
-subjectfile = "./src/AdagioPN01-06dB.wav"  # Demonstration file with 2 seconds of random noise, 60 seconds of an adagio with PN01 noise, and 2 seconds of random noise.
+subjectfile = "./src/AdagioPN01-12dB2snoise1.wav"  # Demonstration file with 2 seconds of random noise, 60 seconds of an adagio with PN01 noise, and 2 seconds of random noise.
 segmentfile = "./src/PN01.wav"
 
 print("\n    enter findsegmentorder at "+str(time.asctime(time.gmtime())))
 segmenttimingarray = findsegmentorder(subjectfile, segmentfile, observationperiod, cyclicpad, neighborhood)
 print("\n    leave findsegmentorder at "+str(time.asctime(time.gmtime())))
 
-print(segmenttimingarray)       # The output here will be a list of timings, in 1/RATE second units.  E.g., 24760 means the current segment matched the audio file at 24760/48000 seconds from the start of the PN sequence, or 5.15 seconds.
-
 # Check the result, satisfying "all segments in order" requirement in DPCTF spec
 segmentcount = len(segmenttimingarray)
 errorcount = 0
 for idx in range(1, segmentcount):
     if segmenttimingarray[idx] <= segmenttimingarray[idx-1]:
-        print("Error, segments out of order at "+str(segmenttimingarray[idx]))
+        print("Error, segments out of order, expected "+str((idx-1)*observationperiod)+", found "+str(segmenttimingarray[idx]))
         errorcount += 1
         #sys.exit(-1)
 

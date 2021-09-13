@@ -204,19 +204,19 @@ def opendatafile(filename, verifyhash):
     # Return data includes channeldata but only the part that represents the L channel.
     return (samplerate, channeldata[0::channels], channels, sampleformat, hashresult)
 
-def trimaudio(subjectdata, segmentdatafront, segmentdatarear, cyclicpad, NONE_TYPE):
+def trimaudio(subjectdata, segmentdata, cyclicpad, windowtype):
     # Accepts 
     # 1) subjectdata: a first audio file that was presumably recorded with some dead time before the audio of interest, 
-    # 2) segmentdatafront: a segment of PN audio that should mark the beginning of the audio of interest, 
-    # 2) segmentdatarear:  a segment of PN audio that should mark the beginning of the audio of interest, 
-    # 3) observationperiod: a duration interpreted as a multiple of (1/samplerate), 
-    # 4) cyclicpad: A cyclic prefix length for windowing
+    # 2) segmentdata:  a segment of PN audio that should mark the end of the audio of interest, 
+    # 3) cyclicpad: A cyclic prefix length for windowing
+    # 4) windowtype: Window function type for applywindow
     # Returns: a shorter copy of subjectdata with leading audio trimmed.  The portio trimmed is the part
     # prior to first occurance of segmentdata.
 
-    resultfront = gettimefromsegment(subjectdata, segmentdatafront, cyclicpad, NONE_TYPE)
-    resultrear  = gettimefromsegment(subjectdata, segmentdatarear,  cyclicpad, NONE_TYPE) + len(segmentdatarear)
-    trimmeddata = subjectdata[resultfront[0]:resultrear[0]].copy()
+    # Align the archived copy of PN data (segmentdata) with the PN data in the recorded audio (sujectdata) 
+    result = gettimefromsegment(subjectdata, segmentdata, cyclicpad, windowtype)
+    # Trim the front and back of the recorded audio to get rid of useless extra recording time
+    trimmeddata = subjectdata[result[0]:(len(segmentdata)+result[0])].copy()
  
     return trimmeddata
 
@@ -251,9 +251,9 @@ def findsegmentorder(subjectfile, segmentfile, observationperiod, cyclicpad, nei
     sampleformat   = subjectinfo[3] # Can also fetch channels as subjectinfo[2] if needed
     
     # Trim off any leading (useless) audio prior to the watermarked portion
-    segmentdatafront = segmentdataPN[0:(2*samplerate)].copy()   # Use the first two seconds of PN data
-    segmentdatarear  = segmentdataPN[len(segmentdataPN)-(2*samplerate):].copy()   # Use the last two seconds of PN data
-    filedata = trimaudio(rawfiledata, segmentdatafront, segmentdatarear, cyclicpad, NONE_TYPE)
+    #segmentdatafront = segmentdataPN[0:(2*samplerate)].copy()   # Use the first two seconds of PN data
+    #segmentdatarear  = segmentdataPN[len(segmentdataPN)-(2*samplerate):].copy()   # Use the last two seconds of PN data
+    filedata = trimaudio(rawfiledata, segmentdataPN, cyclicpad, NONE_TYPE)
     
     duration   = math.floor(len(filedata)/samplerate)
     if duration != segmentduration:
